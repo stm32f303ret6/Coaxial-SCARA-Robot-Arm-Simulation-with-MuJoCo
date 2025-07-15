@@ -1,0 +1,81 @@
+<mujoco model="scara_arm">
+
+    <worldbody>
+        <!-- Root body with Z linear joint -->
+        <body name="root" pos="0.0423 0 0.0">
+            <!-- Z linear actuator joint -->
+            <joint name="z_slide" type="slide" axis="0 0 2" limited="true" range="0 0.2" damping="1"/>
+            
+            <!-- Base body, moved inside root -->
+            <body name="base" pos="0 0 0.08" euler="0 180 0">
+                <geom type="mesh" mesh="steppers" rgba="0.4 0.4 0.4 1" contype="0" conaffinity="0"/>
+                <geom type="mesh" mesh="base_stepper" rgba="0.95 0.65 0.0 1" contype="0" conaffinity="0"/>
+                
+
+                <!-- First arm -->
+                <body name="arm1" pos="0.0423 0 0.03" euler="0 180 0">
+                    <geom type="mesh" mesh="arm1" rgba="0.95 0.65 0.0 1" mass="5"/>
+                    <joint name="joint1" type="hinge" axis="0 0 1" pos="0 0 0" damping="0.0001"/>
+
+                    <!-- Second arm -->
+                    <body name="arm2" pos="0.1 0 -0.028" euler="0 0 180">
+                        <geom type="mesh" mesh="arm1" rgba="0.95 0.65 0.0 1" mass="5"/>
+                        <joint name="joint2" type="hinge" axis="0 0 1" pos="0 0 0" damping="0.0001"/>
+
+                        <!-- Gripper base and fingers -->
+                        <body name="gripper_base" pos="0.1 0 0">
+                            <joint name="gripper_rot" type="hinge" axis="0 0 1" damping="0.1"/>
+                            <geom type="cylinder" size="0.002 0.001" rgba="0.95 0.65 0.0 1" mass="1" name="gripper_base"/>
+
+                            <body name="left_finger" pos="-0.005 0 -0.01">
+                                <joint name="left_slide" type="slide" axis="1 0 0" limited="true" range="-0.011 0" damping="0.1"/>
+                                <geom type="box" size="0.002 0.005 0.007" pos="0.003 0 0" rgba="0.95 0.65 0.0 1" friction="5 0.01 0.01" mass="2.5" solimp="3 1 0.01" solref="0.01 1" condim="1" />
+                            </body>
+
+                            <body name="right_finger" pos="0.005 0 -0.01">
+                                <joint name="right_slide" type="slide" axis="1 0 0" limited="true" range="0 0.011" damping="0.1"/>
+                                <geom type="box" size="0.002 0.005 0.007" pos="-0.003 0 0" rgba="0.95 0.65 0.0 1" friction="5 0.01 0.01" mass="2.5" solimp="3 1 0.01" solref="0.01 1" condim="1" />
+                            </body>
+                        </body>
+                    </body>
+                </body>
+            </body>
+        </body>
+    </worldbody>
+
+    <asset>
+        <mesh name="steppers" file="steppers.stl" scale="0.001 0.001 0.001"/>
+        <mesh name="arm1" file="1st_arm.stl" scale="0.001 0.001 0.001"/>
+        <mesh name="arm2" file="2d_arm.stl" scale="0.001 0.001 0.001"/>
+        <mesh name="base_stepper" file="base_stepper.stl" scale="0.001 0.001 0.001"/>
+    </asset>
+
+    <equality>
+        <joint name="gripper_symmetry" joint1="left_slide" joint2="right_slide" polycoef="0 -1"/>
+    </equality>
+
+    <actuator>
+        <!-- Linear actuator on Z -->
+        <position name="z_lift" joint="z_slide" ctrlrange="0.01 0.1" kp="30000" kv="10000" forcerange="-1000 1000"/>
+        
+        <!-- Velocity actuators for rotation 
+        <velocity name="motor1" joint="joint1" ctrlrange="-3 3" gear="1" kv="500"/>
+        <velocity name="motor2" joint="joint2" ctrlrange="-3 3" gear="1" kv="500"/>
+        <velocity name="gripper_motor" joint="gripper_rot" ctrlrange="-1 1"/> -->
+        <velocity name="motor1" joint="joint1" ctrlrange="-3 3" kv="15" forcerange="-10000 10000"/>
+        <velocity name="motor2" joint="joint2" ctrlrange="-3 3" kv="15" forcerange="-10000 10000"/>
+        <position name="gripper_motor" joint="gripper_rot" ctrlrange="-3.14159 3.14159" kv="0.01" forcerange="-1000 1000" />
+        <!-- Gripper finger actuator -->
+        <motor name="gripper_open" joint="right_slide" forcerange="-10 10" ctrlrange="-10 10"/>
+    </actuator>
+    
+    <sensor>
+        <jointpos name="z_height" joint="z_slide"/>
+        <jointpos name="angle_arm1" joint="joint1"/>
+        <jointpos name="angle_arm2" joint="joint2"/>
+        <jointpos name="angle_gripper" joint="gripper_rot"/>
+        <jointpos name="right_slide_pos" joint="right_slide"/>
+    </sensor>
+
+</mujoco>
+
